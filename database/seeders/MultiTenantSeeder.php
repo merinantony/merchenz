@@ -128,6 +128,7 @@ class MultiTenantSeeder extends Seeder
         $sub = Subscription::firstOrCreate(
             ['customer_id' => $customer->id, 'plan_id' => $growth->id],
             [
+                'merchant_id' => $merchant->id,
                 'started_at' => $cycleStart,
                 'ends_at' => $cycleEnd,
                 'status' => 'active',
@@ -135,9 +136,10 @@ class MultiTenantSeeder extends Seeder
         );
 
         // Record usage aggregation in both Global DB and Client DB
-        DailyUsageAggregation::firstOrCreate(
-            ['customer_id' => $customer->id, 'usage_date' => Carbon::now()->toDateString()],
+        DailyUsageAggregation::withoutGlobalScopes()->updateOrCreate(
+            ['customer_id' => $customer->id, 'usage_date' => Carbon::now()->startOfDay()],
             [
+                'merchant_id' => $merchant->id,
                 'total_units' => 18500,
                 'total_quantity' => 18500,
             ]
@@ -150,7 +152,7 @@ class MultiTenantSeeder extends Seeder
                 ['name' => $customer->name]
             );
 
-            Subscription::on('tenant')->firstOrCreate(
+            Subscription::on('tenant')->updateOrCreate(
                 ['customer_id' => $tCustomer->id, 'plan_id' => $growth->id],
                 [
                     'started_at' => $cycleStart,
@@ -159,8 +161,8 @@ class MultiTenantSeeder extends Seeder
                 ]
             );
 
-            DailyUsageAggregation::on('tenant')->firstOrCreate(
-                ['customer_id' => $tCustomer->id, 'usage_date' => Carbon::now()->toDateString()],
+            DailyUsageAggregation::on('tenant')->updateOrCreate(
+                ['customer_id' => $tCustomer->id, 'usage_date' => Carbon::now()->startOfDay()],
                 [
                     'total_units' => 18500,
                     'total_quantity' => 18500,
@@ -169,3 +171,4 @@ class MultiTenantSeeder extends Seeder
         });
     }
 }
+

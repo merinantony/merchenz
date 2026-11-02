@@ -2,17 +2,19 @@
 
 namespace App\Models;
 
+use App\Traits\BelongsToTenant;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class DailyUsageAggregation extends Model
 {
-    use HasFactory;
+    use HasFactory, BelongsToTenant;
 
     protected $table = 'daily_usage_aggregations';
 
     protected $fillable = [
+        'merchant_id',
         'customer_id',
         'usage_date',
         'total_units',

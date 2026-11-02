@@ -2,13 +2,17 @@
 
 namespace App\Models;
 
+use App\Traits\BelongsToTenant;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Invoice extends Model
 {
+    use BelongsToTenant;
+
     protected $fillable = [
+        'merchant_id',
         'subscription_id',
         'customer_id',
         'period_start',

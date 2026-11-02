@@ -730,6 +730,22 @@
                 </div>
 
                 <span class="header-badge">● Live</span>
+
+                @if(auth()->check())
+                    <div style="display: inline-flex; align-items: center; gap: 8px; background: var(--bg-card); border: 1px solid var(--border-subtle); padding: 5px 12px; border-radius: 20px; font-size: 12px;">
+                        <span style="font-weight: 600; color: var(--text-primary);">{{ auth()->user()->name }}</span>
+                        <span style="background: rgba(220, 38, 38, 0.15); color: var(--accent-red); padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: 700; text-transform: uppercase;">{{ auth()->user()->role ?? 'Admin' }}</span>
+                        @if(auth()->user()->isSuperAdmin())
+                            <a href="{{ route('superadmin.dashboard') }}" style="color: var(--accent-red); text-decoration: none; font-weight: 600; margin-left: 4px;">Super Admin</a>
+                        @endif
+                        <form method="POST" action="{{ route('logout') }}" style="display: inline; margin: 0;">
+                            @csrf
+                            <button type="submit" style="background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 11px; font-weight: 600; padding: 0 4px;">Sign Out</button>
+                        </form>
+                    </div>
+                @else
+                    <a href="{{ route('login') }}" style="color: var(--text-secondary); text-decoration: none; font-size: 12px; font-weight: 600; padding: 6px 12px; border: 1px solid var(--border-subtle); border-radius: 16px;">Sign In</a>
+                @endif
             </div>
         </header>
 
