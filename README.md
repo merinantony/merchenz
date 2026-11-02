@@ -253,7 +253,26 @@ php artisan serve
 
 ---
 
-## Automated Test Suite (57 Tests, 449 Assertions)
+## Custom Error & System Availability Pages
+
+All error and availability pages share the responsive **Dark** (Black & Red) and **White** (Red & White) combo themes with strict "Dark" and "White" toggle buttons:
+
+1. **`404 Not Found`** ([`resources/views/errors/404.blade.php`](resources/views/errors/404.blade.php)):
+   - Triggered when an unmapped tenant endpoint or resource is requested.
+   - Provides instant "Return to Dashboard", "Go Back", and quick navigation links.
+2. **`403 Access Forbidden`** ([`resources/views/errors/403.blade.php`](resources/views/errors/403.blade.php)):
+   - Triggered when a tenant user attempts to access elevated routes (e.g. Super Admin dashboard).
+   - Details the platform's 3-tier role boundary (Super Admin vs. Tenant Admin vs. Tenant User) with dynamic redirect to `/my-plan` or switch account options.
+3. **`503 Server Engine Unavailable`** ([`resources/views/errors/503.blade.php`](resources/views/errors/503.blade.php)):
+   - Triggered when Laravel enters maintenance mode (`php artisan down`) or previewed via `/unavailable`.
+   - Displays real-time diagnostic indicators (Ingestion API, Tenant DB, Queue Worker), auto-countdown reconnect loop, and terminal startup tips.
+4. **Offline Fallback Page** ([`public/unavailable.html`](public/unavailable.html)):
+   - Standalone, zero-PHP dependency page designed for when the local web server or PHP process is **not started** or unreachable behind a reverse proxy.
+   - Includes automatic polling loop (`fetch('/')`) that immediately redirects once the server boots.
+
+---
+
+## Automated Test Suite (61 Tests, 472 Assertions)
 
 Execute the complete automated test suite:
 
@@ -292,6 +311,11 @@ php artisan test
   - Database schema integrity for all tables
   - Foreign key relations and tenant associations
   - Daily aggregations rollup schema
+- **`ErrorPagesTest`** (4 tests):
+  - 404 page rendering with custom theme
+  - 403 page rendering when user is unauthorized
+  - 503 unavailable page rendering
+  - Static `public/unavailable.html` existence and offline polling logic
 - **`ExampleTest`** (2 tests):
   - Root redirect
   - Dashboard rendering with Dark & White theme switcher
@@ -318,6 +342,6 @@ php artisan test
   - Multi-customer aggregation handling
 
 ```
-Tests:    57 passed (449 assertions)
-Duration: 2.47s
+Tests:    61 passed (472 assertions)
+Duration: 3.02s
 ```

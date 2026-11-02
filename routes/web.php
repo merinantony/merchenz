@@ -33,3 +33,8 @@ Route::get('/super-admin/dashboard', [SuperAdminController::class, 'dashboard'])
 Route::get('/my-plan', [UserPlanController::class, 'show'])
     ->middleware(['auth'])
     ->name('user.plan');
+
+// System Availability & Error Preview Routes
+Route::get('/unavailable', function () {
+    return response()->view('errors.503', [], 503);
+})->name('system.unavailable');
