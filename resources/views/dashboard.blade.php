@@ -20,92 +20,104 @@
         })();
     </script>
     <style>
-        :root, [data-theme="dark"] {
-            --bg-primary: #0f0f1a;
-            --bg-secondary: #1a1a2e;
-            --bg-card: #16213e;
-            --bg-card-hover: #1a2744;
-            --accent-blue: #4361ee;
-            --accent-purple: #7209b7;
-            --accent-cyan: #00b4d8;
+        :root, [data-theme="dark"], [data-theme="black-red"] {
+            /* Black & Red Combo Theme (Dark) */
+            --bg-primary: #09090c;
+            --bg-secondary: #121217;
+            --bg-card: #15151e;
+            --bg-card-hover: #1c1c28;
+            --accent-red: #ff334b;
+            --accent-red-hover: #ff4d61;
+            --accent-crimson: #e61e38;
+            --accent-blue: #ff334b;
+            --accent-purple: #e11d48;
+            --accent-cyan: #ff4d61;
             --accent-green: #06d6a0;
-            --accent-orange: #f72585;
-            --accent-yellow: #ffd166;
-            --text-primary: #e8e8f0;
-            --text-secondary: #9ca3af;
-            --text-muted: #6b7280;
-            --border-subtle: rgba(255, 255, 255, 0.06);
-            --border-accent: rgba(67, 97, 238, 0.3);
-            --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.3);
-            --shadow-glow: 0 0 30px rgba(67, 97, 238, 0.15);
+            --accent-orange: #ff334b;
+            --accent-yellow: #ff9f1c;
+            --text-primary: #f5f5f7;
+            --text-secondary: #a1a1aa;
+            --text-muted: #71717a;
+            --border-subtle: rgba(255, 51, 75, 0.12);
+            --border-accent: rgba(255, 51, 75, 0.45);
+            --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.7), 0 0 1px rgba(255, 51, 75, 0.2);
+            --shadow-glow: 0 0 30px rgba(255, 51, 75, 0.25);
             --radius: 16px;
             --radius-sm: 10px;
-            --table-hover: rgba(255, 255, 255, 0.02);
-            --table-border: rgba(255, 255, 255, 0.03);
+            --table-hover: rgba(255, 51, 75, 0.04);
+            --table-border: rgba(255, 255, 255, 0.04);
             --track-bg: rgba(255, 255, 255, 0.06);
-            --churn-bg: linear-gradient(135deg, rgba(247, 37, 133, 0.08), rgba(247, 37, 133, 0.02));
-            --churn-border: rgba(247, 37, 133, 0.2);
-            --churn-item-bg: rgba(0, 0, 0, 0.15);
-            --churn-item-hover: rgba(0, 0, 0, 0.25);
-            --churn-item-border: transparent;
-            --system-bg: linear-gradient(135deg, rgba(6, 214, 160, 0.06), rgba(0, 180, 216, 0.03));
-            --system-border: rgba(6, 214, 160, 0.18);
-            --badge-live-bg: rgba(6, 214, 160, 0.12);
-            --badge-live-border: rgba(6, 214, 160, 0.25);
-            --badge-live-color: var(--accent-green);
-            --toggle-container-bg: rgba(255, 255, 255, 0.06);
-            --toggle-container-border: rgba(255, 255, 255, 0.1);
-            --toggle-btn-active-bg: #4361ee;
+            --churn-bg: linear-gradient(135deg, rgba(230, 30, 56, 0.12), rgba(10, 10, 13, 0.6));
+            --churn-border: rgba(255, 51, 75, 0.35);
+            --churn-item-bg: rgba(22, 22, 30, 0.85);
+            --churn-item-hover: rgba(30, 30, 42, 0.95);
+            --churn-item-border: rgba(255, 51, 75, 0.15);
+            --system-bg: linear-gradient(135deg, rgba(255, 51, 75, 0.06), rgba(18, 18, 23, 0.9));
+            --system-border: rgba(255, 51, 75, 0.25);
+            --badge-live-bg: rgba(255, 51, 75, 0.15);
+            --badge-live-border: rgba(255, 51, 75, 0.45);
+            --badge-live-color: #ff334b;
+            --toggle-container-bg: #121217;
+            --toggle-container-border: rgba(255, 51, 75, 0.25);
+            --toggle-btn-active-bg: #e61e38;
             --toggle-btn-active-color: #ffffff;
-            --toggle-btn-active-shadow: 0 2px 8px rgba(67, 97, 238, 0.4);
-            --toggle-btn-color: #9ca3af;
-            --bg-gradient-1: rgba(67, 97, 238, 0.08);
-            --bg-gradient-2: rgba(114, 9, 183, 0.06);
-            --bg-gradient-3: rgba(0, 180, 216, 0.04);
+            --toggle-btn-active-shadow: 0 2px 10px rgba(230, 30, 56, 0.6);
+            --toggle-btn-color: #a1a1aa;
+            --bg-gradient-1: rgba(255, 51, 75, 0.09);
+            --bg-gradient-2: rgba(225, 29, 72, 0.07);
+            --bg-gradient-3: rgba(185, 28, 28, 0.05);
+            --tag-bg: rgba(255, 255, 255, 0.08);
+            --tag-color: #f5f5f7;
         }
 
-        [data-theme="light"], [data-theme="white"] {
-            --bg-primary: #f8fafc;
-            --bg-secondary: #f1f5f9;
+        [data-theme="light"], [data-theme="white"], [data-theme="red-white"] {
+            /* Red & White Combo Theme (Light) */
+            --bg-primary: #fcfcfd;
+            --bg-secondary: #f6f6f9;
             --bg-card: #ffffff;
-            --bg-card-hover: #fcfdfe;
-            --accent-blue: #3b82f6;
-            --accent-purple: #8b5cf6;
-            --accent-cyan: #0284c7;
-            --accent-green: #10b981;
-            --accent-orange: #ef4444;
-            --accent-yellow: #f59e0b;
-            --text-primary: #0f172a;
-            --text-secondary: #475569;
-            --text-muted: #64748b;
-            --border-subtle: #e2e8f0;
-            --border-accent: rgba(59, 130, 246, 0.35);
-            --shadow-card: 0 4px 20px rgba(15, 23, 42, 0.05), 0 1px 3px rgba(15, 23, 42, 0.03);
-            --shadow-glow: 0 0 25px rgba(59, 130, 246, 0.12);
+            --bg-card-hover: #fff5f5;
+            --accent-red: #dc2626;
+            --accent-red-hover: #b91c1c;
+            --accent-crimson: #dc2626;
+            --accent-blue: #dc2626;
+            --accent-purple: #b91c1c;
+            --accent-cyan: #ef4444;
+            --accent-green: #059669;
+            --accent-orange: #dc2626;
+            --accent-yellow: #d97706;
+            --text-primary: #111827;
+            --text-secondary: #4b5563;
+            --text-muted: #6b7280;
+            --border-subtle: #fee2e2;
+            --border-accent: rgba(220, 38, 38, 0.4);
+            --shadow-card: 0 4px 20px rgba(220, 38, 38, 0.06), 0 1px 3px rgba(0, 0, 0, 0.05);
+            --shadow-glow: 0 0 25px rgba(220, 38, 38, 0.18);
             --radius: 16px;
             --radius-sm: 10px;
-            --table-hover: #f8fafc;
-            --table-border: #f1f5f9;
-            --track-bg: #e2e8f0;
-            --churn-bg: linear-gradient(135deg, #fff1f2, #fff5f7);
-            --churn-border: #fecdd3;
+            --table-hover: #fef2f2;
+            --table-border: #f3f4f6;
+            --track-bg: #fee2e2;
+            --churn-bg: linear-gradient(135deg, #fff5f5, #fef2f2);
+            --churn-border: #fca5a5;
             --churn-item-bg: #ffffff;
             --churn-item-hover: #fff1f2;
-            --churn-item-border: #ffe4e6;
-            --system-bg: linear-gradient(135deg, #f0fdf4, #f8fafc);
-            --system-border: #bbf7d0;
-            --badge-live-bg: #dcfce7;
-            --badge-live-border: #86efac;
-            --badge-live-color: #15803d;
-            --toggle-container-bg: #e2e8f0;
-            --toggle-container-border: #cbd5e1;
-            --toggle-btn-active-bg: #ffffff;
-            --toggle-btn-active-color: #0f172a;
-            --toggle-btn-active-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-            --toggle-btn-color: #64748b;
-            --bg-gradient-1: rgba(59, 130, 246, 0.05);
-            --bg-gradient-2: rgba(139, 92, 246, 0.04);
-            --bg-gradient-3: rgba(2, 132, 199, 0.03);
+            --churn-item-border: #fecaca;
+            --system-bg: linear-gradient(135deg, #ffffff, #fff5f5);
+            --system-border: #fca5a5;
+            --badge-live-bg: #fee2e2;
+            --badge-live-border: #fca5a5;
+            --badge-live-color: #b91c1c;
+            --toggle-container-bg: #f3f4f6;
+            --toggle-container-border: #e5e7eb;
+            --toggle-btn-active-bg: #dc2626;
+            --toggle-btn-active-color: #ffffff;
+            --toggle-btn-active-shadow: 0 2px 8px rgba(220, 38, 38, 0.4);
+            --toggle-btn-color: #4b5563;
+            --bg-gradient-1: rgba(220, 38, 38, 0.05);
+            --bg-gradient-2: rgba(239, 68, 68, 0.04);
+            --bg-gradient-3: rgba(185, 28, 28, 0.03);
+            --tag-bg: rgba(220, 38, 38, 0.1);
+            --tag-color: #b91c1c;
         }
 
         * {
@@ -217,7 +229,7 @@
             border-radius: 24px;
             padding: 3px;
             gap: 2px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
             transition: all 0.25s ease;
         }
 
@@ -700,7 +712,7 @@
             </div>
 
             <div class="header-right">
-                <!-- Theme Switcher: Dark and White/Light theme -->
+                <!-- Theme Switcher: Dark and White only -->
                 <div class="theme-switcher" role="group" aria-label="Theme selector">
                     <button type="button" class="theme-btn active" id="btn-theme-dark" data-theme-val="dark" title="Switch to Dark theme">
                         <svg viewBox="0 0 24 24" fill="currentColor">
@@ -883,12 +895,15 @@
     </div>
 
     <script>
-        // Theme Switching Logic with localStorage persistence
+        // Theme Switching Logic with localStorage persistence (Black & Red vs Red & White)
         function applyTheme(theme, save = true) {
-            document.documentElement.setAttribute('data-theme', theme);
+            const isDark = (theme === 'dark' || theme === 'black-red');
+            const normalizedTheme = isDark ? 'dark' : 'light';
+
+            document.documentElement.setAttribute('data-theme', normalizedTheme);
             if (save) {
                 try {
-                    localStorage.setItem('merchenz_theme', theme);
+                    localStorage.setItem('merchenz_theme', normalizedTheme);
                 } catch (e) {}
             }
 
@@ -896,7 +911,7 @@
             const lightBtn = document.getElementById('btn-theme-light');
 
             if (darkBtn && lightBtn) {
-                if (theme === 'dark') {
+                if (isDark) {
                     darkBtn.classList.add('active');
                     darkBtn.setAttribute('aria-pressed', 'true');
                     lightBtn.classList.remove('active');

@@ -44,6 +44,18 @@ return [
             'transaction_mode' => 'DEFERRED',
         ],
 
+        // Dedicated Client Database Connection (Dynamically assigned per tenant)
+        'tenant' => [
+            'driver' => 'sqlite',
+            'database' => env('DB_TENANT_DATABASE', database_path('tenant_default.sqlite')),
+            'prefix' => '',
+            'foreign_key_constraints' => env('DB_FOREIGN_KEYS', true),
+            'busy_timeout' => null,
+            'journal_mode' => null,
+            'synchronous' => null,
+            'transaction_mode' => 'DEFERRED',
+        ],
+
         'mysql' => [
             'driver' => 'mysql',
             'url' => env('DB_URL'),
