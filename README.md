@@ -61,7 +61,7 @@ merchants ──< plans ──< subscriptions >── customers
                               │
                           invoices ──< invoice_line_items
                               │
-              usage_events ──>│<── daily_usage_summaries
+              usage_events ──>│<── daily_usage_aggregations / summaries
 ```
 
 ### Tables & Indexes
@@ -69,24 +69,24 @@ merchants ──< plans ──< subscriptions >── customers
 | Table | Key Indexes | Purpose |
 |-------|------------|---------|
 | `merchants` | PK, UNIQUE(email), INDEX(api_key) | Tenant root |
-| `plans` | FK(merchant_id), INDEX(merchant_id) | Pricing definitions |
+| `plans` | FK(merchant_id), INDEX(merchant_id) | Pricing definitions (`base_price`, `billing_cycle`, `included_usage_units`, `overage_rate_per_unit`) |
 | `customers` | FK(merchant_id), UNIQUE(merchant_id, email) | Tenant-scoped customers |
 | `subscriptions` | FK(customer_id, plan_id), INDEX(customer_id, status), INDEX(ends_at) | Active subscription tracking |
 | `subscription_changes` | FK(subscription_id), INDEX(changed_at) | Mid-cycle plan change audit trail |
-| `usage_events` | **UNIQUE(idempotency_key)**, INDEX(customer_id, recorded_at), INDEX(recorded_at) | High-write event log |
-| `daily_usage_summaries` | UNIQUE(customer_id, usage_date), INDEX(usage_date) | Aggregated daily totals |
-| `invoices` | FK(subscription_id, customer_id), INDEX(customer_id, period_start) | Billing output |
+| `usage_events` | **UNIQUE(event_id / idempotency_key)**, INDEX(customer_id, timestamp/recorded_at), INDEX(timestamp/recorded_at) | High-write event log (`event_id`, `units`, `timestamp`) |
+| `daily_usage_aggregations` | UNIQUE(customer_id, usage_date), INDEX(usage_date) | Aggregated daily totals (`total_units`, `total_quantity`) |
+| `invoices` | FK(subscription_id, customer_id), INDEX(customer_id, period_start) | Billing output (`base_amount`, `overage_units`, `overage_amount`, `total_amount`) |
 | `invoice_line_items` | FK(invoice_id, plan_id) | Split billing segments |
 
-### Scale Reasoning (50M+ usage_events)
+### Scale Reasoning (50L+ / 50M+ usage_events)
 
 **Current approach holds up well because:**
 
-1. **UNIQUE(idempotency_key)** — dedup at the DB level, no application-layer locking needed. B-tree index handles lookups in O(log n) even at 50M+ rows.
+1. **UNIQUE(event_id / idempotency_key)** — deduplication at the DB level via B-tree index, guaranteeing O(log n) lookups without application-level distributed locks.
 
-2. **Composite INDEX(customer_id, recorded_at)** — the aggregation job queries by date range per customer. This index supports both the equality predicate on `customer_id` and the range scan on `recorded_at`.
+2. **Composite INDEX(customer_id, timestamp / recorded_at)** — index seek on `customer_id` followed by a narrow range scan on `timestamp`, preventing full table scans over 50L+ rows during customer billing cycle calculations.
 
-3. **Daily summaries table** — the dashboard never touches `usage_events` directly. All analytics run against `daily_usage_summaries`, which has ~30x fewer rows.
+3. **Pre-aggregated daily_usage_aggregations table** — the billing engine and dashboard query `daily_usage_aggregations` instead of raw `usage_events`. For 5M events per month across 1,000 customers, this shrinks the queried dataset from 5,000,000 rows to ~30,000 rows (~166x reduction).
 
 **What I'd add at 50M+ scale:**
 

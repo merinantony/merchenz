@@ -1,13 +1,26 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="MerchenZ — SaaS Usage Metering & Billing Dashboard">
     <title>{{ $dashboard['merchant']['name'] }} — MerchenZ Dashboard</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script>
+        // Immediately set theme on document element before render to avoid FOUC (flash of unstyled content)
+        (function() {
+            try {
+                var savedTheme = localStorage.getItem('merchenz_theme');
+                var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+                var theme = savedTheme ? savedTheme : (prefersDark ? 'dark' : 'dark');
+                document.documentElement.setAttribute('data-theme', theme);
+            } catch (e) {
+                document.documentElement.setAttribute('data-theme', 'dark');
+            }
+        })();
+    </script>
     <style>
-        :root {
+        :root, [data-theme="dark"] {
             --bg-primary: #0f0f1a;
             --bg-secondary: #1a1a2e;
             --bg-card: #16213e;
@@ -27,6 +40,72 @@
             --shadow-glow: 0 0 30px rgba(67, 97, 238, 0.15);
             --radius: 16px;
             --radius-sm: 10px;
+            --table-hover: rgba(255, 255, 255, 0.02);
+            --table-border: rgba(255, 255, 255, 0.03);
+            --track-bg: rgba(255, 255, 255, 0.06);
+            --churn-bg: linear-gradient(135deg, rgba(247, 37, 133, 0.08), rgba(247, 37, 133, 0.02));
+            --churn-border: rgba(247, 37, 133, 0.2);
+            --churn-item-bg: rgba(0, 0, 0, 0.15);
+            --churn-item-hover: rgba(0, 0, 0, 0.25);
+            --churn-item-border: transparent;
+            --system-bg: linear-gradient(135deg, rgba(6, 214, 160, 0.06), rgba(0, 180, 216, 0.03));
+            --system-border: rgba(6, 214, 160, 0.18);
+            --badge-live-bg: rgba(6, 214, 160, 0.12);
+            --badge-live-border: rgba(6, 214, 160, 0.25);
+            --badge-live-color: var(--accent-green);
+            --toggle-container-bg: rgba(255, 255, 255, 0.06);
+            --toggle-container-border: rgba(255, 255, 255, 0.1);
+            --toggle-btn-active-bg: #4361ee;
+            --toggle-btn-active-color: #ffffff;
+            --toggle-btn-active-shadow: 0 2px 8px rgba(67, 97, 238, 0.4);
+            --toggle-btn-color: #9ca3af;
+            --bg-gradient-1: rgba(67, 97, 238, 0.08);
+            --bg-gradient-2: rgba(114, 9, 183, 0.06);
+            --bg-gradient-3: rgba(0, 180, 216, 0.04);
+        }
+
+        [data-theme="light"], [data-theme="white"] {
+            --bg-primary: #f8fafc;
+            --bg-secondary: #f1f5f9;
+            --bg-card: #ffffff;
+            --bg-card-hover: #fcfdfe;
+            --accent-blue: #3b82f6;
+            --accent-purple: #8b5cf6;
+            --accent-cyan: #0284c7;
+            --accent-green: #10b981;
+            --accent-orange: #ef4444;
+            --accent-yellow: #f59e0b;
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
+            --text-muted: #64748b;
+            --border-subtle: #e2e8f0;
+            --border-accent: rgba(59, 130, 246, 0.35);
+            --shadow-card: 0 4px 20px rgba(15, 23, 42, 0.05), 0 1px 3px rgba(15, 23, 42, 0.03);
+            --shadow-glow: 0 0 25px rgba(59, 130, 246, 0.12);
+            --radius: 16px;
+            --radius-sm: 10px;
+            --table-hover: #f8fafc;
+            --table-border: #f1f5f9;
+            --track-bg: #e2e8f0;
+            --churn-bg: linear-gradient(135deg, #fff1f2, #fff5f7);
+            --churn-border: #fecdd3;
+            --churn-item-bg: #ffffff;
+            --churn-item-hover: #fff1f2;
+            --churn-item-border: #ffe4e6;
+            --system-bg: linear-gradient(135deg, #f0fdf4, #f8fafc);
+            --system-border: #bbf7d0;
+            --badge-live-bg: #dcfce7;
+            --badge-live-border: #86efac;
+            --badge-live-color: #15803d;
+            --toggle-container-bg: #e2e8f0;
+            --toggle-container-border: #cbd5e1;
+            --toggle-btn-active-bg: #ffffff;
+            --toggle-btn-active-color: #0f172a;
+            --toggle-btn-active-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+            --toggle-btn-color: #64748b;
+            --bg-gradient-1: rgba(59, 130, 246, 0.05);
+            --bg-gradient-2: rgba(139, 92, 246, 0.04);
+            --bg-gradient-3: rgba(2, 132, 199, 0.03);
         }
 
         * {
@@ -41,6 +120,7 @@
             color: var(--text-primary);
             min-height: 100vh;
             overflow-x: hidden;
+            transition: background-color 0.3s ease, color 0.3s ease;
         }
 
         /* Animated gradient background */
@@ -51,11 +131,13 @@
             left: -50%;
             width: 200%;
             height: 200%;
-            background: radial-gradient(ellipse at 20% 50%, rgba(67, 97, 238, 0.08) 0%, transparent 50%),
-                        radial-gradient(ellipse at 80% 20%, rgba(114, 9, 183, 0.06) 0%, transparent 50%),
-                        radial-gradient(ellipse at 50% 80%, rgba(0, 180, 216, 0.04) 0%, transparent 50%);
+            background: radial-gradient(ellipse at 20% 50%, var(--bg-gradient-1) 0%, transparent 50%),
+                        radial-gradient(ellipse at 80% 20%, var(--bg-gradient-2) 0%, transparent 50%),
+                        radial-gradient(ellipse at 50% 80%, var(--bg-gradient-3) 0%, transparent 50%);
             animation: bgFloat 20s ease-in-out infinite;
             z-index: 0;
+            pointer-events: none;
+            transition: background 0.3s ease;
         }
 
         @keyframes bgFloat {
@@ -80,9 +162,17 @@
             margin-bottom: 36px;
             padding-bottom: 24px;
             border-bottom: 1px solid var(--border-subtle);
+            flex-wrap: wrap;
+            gap: 16px;
         }
 
         .header-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .header-right {
             display: flex;
             align-items: center;
             gap: 16px;
@@ -100,6 +190,7 @@
             font-size: 18px;
             color: white;
             box-shadow: 0 4px 12px rgba(67, 97, 238, 0.3);
+            flex-shrink: 0;
         }
 
         .header-title h1 {
@@ -117,16 +208,67 @@
             margin-top: 2px;
         }
 
+        /* Theme Switcher */
+        .theme-switcher {
+            display: inline-flex;
+            align-items: center;
+            background: var(--toggle-container-bg);
+            border: 1px solid var(--toggle-container-border);
+            border-radius: 24px;
+            padding: 3px;
+            gap: 2px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+            transition: all 0.25s ease;
+        }
+
+        .theme-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 14px;
+            border-radius: 20px;
+            border: none;
+            background: transparent;
+            color: var(--toggle-btn-color);
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            user-select: none;
+            outline: none;
+        }
+
+        .theme-btn svg {
+            width: 14px;
+            height: 14px;
+            transition: transform 0.2s ease;
+        }
+
+        .theme-btn:hover {
+            color: var(--text-primary);
+        }
+
+        .theme-btn.active {
+            background: var(--toggle-btn-active-bg);
+            color: var(--toggle-btn-active-color);
+            box-shadow: var(--toggle-btn-active-shadow);
+        }
+
+        .theme-btn.active svg {
+            transform: scale(1.1);
+        }
+
         .header-badge {
             padding: 6px 14px;
-            background: rgba(6, 214, 160, 0.12);
-            border: 1px solid rgba(6, 214, 160, 0.25);
+            background: var(--badge-live-bg);
+            border: 1px solid var(--badge-live-border);
             border-radius: 20px;
             font-size: 12px;
             font-weight: 600;
-            color: var(--accent-green);
+            color: var(--badge-live-color);
             text-transform: uppercase;
             letter-spacing: 0.5px;
+            transition: all 0.25s ease;
         }
 
         /* Metric Cards */
@@ -269,13 +411,14 @@
         }
 
         .data-table tbody tr:hover {
-            background: rgba(255, 255, 255, 0.02);
+            background: var(--table-hover);
         }
 
         .data-table tbody td {
             padding: 14px 16px;
             font-size: 14px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+            color: var(--text-primary);
+            border-bottom: 1px solid var(--table-border);
         }
 
         .data-table tbody tr:last-child td {
@@ -284,7 +427,7 @@
 
         .usage-bar-container {
             width: 100%;
-            background: rgba(255, 255, 255, 0.06);
+            background: var(--track-bg);
             border-radius: 6px;
             height: 6px;
             overflow: hidden;
@@ -314,11 +457,12 @@
 
         /* Churn Risk Panel */
         .churn-panel {
-            background: linear-gradient(135deg, rgba(247, 37, 133, 0.08), rgba(247, 37, 133, 0.02));
-            border: 1px solid rgba(247, 37, 133, 0.2);
+            background: var(--churn-bg);
+            border: 1px solid var(--churn-border);
             border-radius: var(--radius);
             padding: 22px;
             margin-bottom: 20px;
+            transition: all 0.3s ease;
         }
 
         .churn-header {
@@ -350,14 +494,15 @@
             justify-content: space-between;
             align-items: center;
             padding: 10px 14px;
-            background: rgba(0, 0, 0, 0.15);
+            background: var(--churn-item-bg);
+            border: 1px solid var(--churn-item-border);
             border-radius: var(--radius-sm);
             margin-bottom: 8px;
-            transition: background 0.2s ease;
+            transition: background 0.2s ease, border-color 0.2s ease;
         }
 
         .churn-item:hover {
-            background: rgba(0, 0, 0, 0.25);
+            background: var(--churn-item-hover);
         }
 
         .churn-item:last-child {
@@ -367,6 +512,7 @@
         .churn-name {
             font-size: 13px;
             font-weight: 500;
+            color: var(--text-primary);
         }
 
         .churn-drop {
@@ -377,10 +523,11 @@
 
         /* System Status Panel */
         .system-panel {
-            background: linear-gradient(135deg, rgba(6, 214, 160, 0.06), rgba(0, 180, 216, 0.03));
-            border: 1px solid rgba(6, 214, 160, 0.18);
+            background: var(--system-bg);
+            border: 1px solid var(--system-border);
             border-radius: var(--radius);
             padding: 22px;
+            transition: all 0.3s ease;
         }
 
         .system-header {
@@ -414,7 +561,7 @@
             padding: 8px 0;
             font-size: 13px;
             color: var(--text-secondary);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+            border-bottom: 1px solid var(--table-border);
         }
 
         .system-item:last-child {
@@ -460,7 +607,7 @@
             border-radius: 4px 4px 0 0;
             transition: all 0.3s ease;
             position: relative;
-            opacity: 0.7;
+            opacity: 0.75;
         }
 
         .chart-bar:hover {
@@ -475,13 +622,15 @@
             top: -28px;
             left: 50%;
             transform: translateX(-50%);
-            background: var(--bg-secondary);
+            background: var(--bg-card);
             border: 1px solid var(--border-accent);
+            box-shadow: var(--shadow-card);
             padding: 2px 8px;
             border-radius: 6px;
             font-size: 11px;
             white-space: nowrap;
             color: var(--accent-cyan);
+            z-index: 10;
         }
 
         .chart-labels {
@@ -512,6 +661,8 @@
             .metrics-grid { grid-template-columns: 1fr; }
             .main-grid { grid-template-columns: 1fr; }
             .metric-value { font-size: 22px; }
+            .header { flex-direction: column; align-items: flex-start; }
+            .header-right { width: 100%; justify-content: space-between; }
         }
 
         /* Fade-in animation */
@@ -547,7 +698,27 @@
                     <div class="subtitle">Usage metering & billing analytics</div>
                 </div>
             </div>
-            <span class="header-badge">● Live</span>
+
+            <div class="header-right">
+                <!-- Theme Switcher: Dark and White/Light theme -->
+                <div class="theme-switcher" role="group" aria-label="Theme selector">
+                    <button type="button" class="theme-btn active" id="btn-theme-dark" data-theme-val="dark" title="Switch to Dark theme">
+                        <svg viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path>
+                        </svg>
+                        <span>Dark</span>
+                    </button>
+                    <button type="button" class="theme-btn" id="btn-theme-light" data-theme-val="light" title="Switch to White theme">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="4"></circle>
+                            <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"></path>
+                        </svg>
+                        <span>White</span>
+                    </button>
+                </div>
+
+                <span class="header-badge">● Live</span>
+            </div>
         </header>
 
         <!-- Metric Cards -->
@@ -712,43 +883,90 @@
     </div>
 
     <script>
-        // Generate usage trend chart bars from daily summaries
-        // We'll use the API data indirectly — for the demo, generate realistic chart bars
-        document.addEventListener('DOMContentLoaded', function() {
-            const chart = document.getElementById('usage-chart');
-            const totalUsage = {{ $dashboard['projected_overage']['total_usage_so_far'] }};
-            const days = 30;
-            const avgDaily = totalUsage / days;
-
-            for (let i = 0; i < days; i++) {
-                const bar = document.createElement('div');
-                bar.className = 'chart-bar';
-
-                // Simulate a realistic trend with some variance
-                const variance = 0.4;
-                const trend = 1 + (i / days) * 0.2; // Slight upward trend
-                const random = 0.6 + Math.random() * variance * 2;
-                const value = Math.round(avgDaily * random * trend);
-                const maxValue = avgDaily * 2;
-                const heightPct = Math.min(95, Math.max(8, (value / maxValue) * 100));
-
-                bar.style.height = heightPct + '%';
-                bar.setAttribute('data-value', value.toLocaleString() + ' units');
-                bar.style.animationDelay = (i * 30) + 'ms';
-
-                chart.appendChild(bar);
+        // Theme Switching Logic with localStorage persistence
+        function applyTheme(theme, save = true) {
+            document.documentElement.setAttribute('data-theme', theme);
+            if (save) {
+                try {
+                    localStorage.setItem('merchenz_theme', theme);
+                } catch (e) {}
             }
 
-            // Animate chart bars
-            const bars = chart.querySelectorAll('.chart-bar');
-            bars.forEach((bar, i) => {
-                const finalHeight = bar.style.height;
-                bar.style.height = '0%';
-                setTimeout(() => {
-                    bar.style.transition = 'height 0.8s cubic-bezier(0.4, 0, 0.2, 1)';
-                    bar.style.height = finalHeight;
-                }, 200 + i * 20);
-            });
+            const darkBtn = document.getElementById('btn-theme-dark');
+            const lightBtn = document.getElementById('btn-theme-light');
+
+            if (darkBtn && lightBtn) {
+                if (theme === 'dark') {
+                    darkBtn.classList.add('active');
+                    darkBtn.setAttribute('aria-pressed', 'true');
+                    lightBtn.classList.remove('active');
+                    lightBtn.setAttribute('aria-pressed', 'false');
+                } else {
+                    lightBtn.classList.add('active');
+                    lightBtn.setAttribute('aria-pressed', 'true');
+                    darkBtn.classList.remove('active');
+                    darkBtn.setAttribute('aria-pressed', 'false');
+                }
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Setup theme toggle buttons
+            const darkBtn = document.getElementById('btn-theme-dark');
+            const lightBtn = document.getElementById('btn-theme-light');
+
+            // Read current applied theme (from script in head or default)
+            const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
+            applyTheme(currentTheme, false);
+
+            if (darkBtn) {
+                darkBtn.addEventListener('click', function() {
+                    applyTheme('dark', true);
+                });
+            }
+
+            if (lightBtn) {
+                lightBtn.addEventListener('click', function() {
+                    applyTheme('light', true);
+                });
+            }
+
+            // Generate usage trend chart bars
+            const chart = document.getElementById('usage-chart');
+            if (chart) {
+                const totalUsage = {{ $dashboard['projected_overage']['total_usage_so_far'] }};
+                const days = 30;
+                const avgDaily = Math.max(10, totalUsage / days);
+
+                for (let i = 0; i < days; i++) {
+                    const bar = document.createElement('div');
+                    bar.className = 'chart-bar';
+
+                    const variance = 0.4;
+                    const trend = 1 + (i / days) * 0.2;
+                    const random = 0.6 + Math.random() * variance * 2;
+                    const value = Math.round(avgDaily * random * trend);
+                    const maxValue = avgDaily * 2;
+                    const heightPct = Math.min(95, Math.max(8, (value / maxValue) * 100));
+
+                    bar.style.height = heightPct + '%';
+                    bar.setAttribute('data-value', value.toLocaleString() + ' units');
+                    bar.style.animationDelay = (i * 30) + 'ms';
+
+                    chart.appendChild(bar);
+                }
+
+                // Animate chart bars
+                const bars = chart.querySelectorAll('.chart-bar');
+                bars.forEach((bar, i) => {
+                    const finalHeight = bar.style.height;
+                    bar.style.height = '0%';
+                    setTimeout(() => {
+                        bar.style.transition = 'height 0.8s cubic-bezier(0.4, 0, 0.2, 1)';
+                        bar.style.height = finalHeight;
+                    }, 200 + i * 20);
+                });
+            }
         });
     </script>
 </body>

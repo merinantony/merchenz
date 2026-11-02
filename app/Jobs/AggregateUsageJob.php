@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use App\Models\DailyUsageAggregation;
 use App\Models\DailyUsageSummary;
 use App\Models\UsageEvent;
 use Carbon\Carbon;
@@ -64,18 +65,24 @@ class AggregateUsageJob implements ShouldQueue
                 return [
                     'customer_id' => $row->customer_id,
                     'usage_date' => $dateStr,
+                    'total_units' => $row->total_quantity,
                     'total_quantity' => $row->total_quantity,
                     'created_at' => now(),
                     'updated_at' => now(),
                 ];
             })->toArray();
 
-            // Upsert: insert or update on conflict (customer_id, usage_date)
-            // This makes the job idempotent — safe to re-run without duplicate entries
+            // Upsert into both daily_usage_aggregations and daily_usage_summaries
+            DailyUsageAggregation::upsert(
+                $upsertData,
+                ['customer_id', 'usage_date'],
+                ['total_units', 'total_quantity', 'updated_at']
+            );
+
             DailyUsageSummary::upsert(
                 $upsertData,
                 ['customer_id', 'usage_date'],
-                ['total_quantity', 'updated_at']
+                ['total_quantity', 'total_units', 'updated_at']
             );
 
             $processed += count($upsertData);

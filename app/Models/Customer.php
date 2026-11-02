@@ -43,6 +43,11 @@ class Customer extends Model
         return $this->hasMany(DailyUsageSummary::class);
     }
 
+    public function dailyUsageAggregations(): HasMany
+    {
+        return $this->hasMany(DailyUsageAggregation::class);
+    }
+
     public function invoices(): HasMany
     {
         return $this->hasMany(Invoice::class);

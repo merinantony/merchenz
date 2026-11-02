@@ -3,6 +3,7 @@
 namespace App\DTOs;
 
 use Carbon\Carbon;
+use Illuminate\Support\Str;
 
 /**
  * Data Transfer Object for usage event recording.
@@ -16,16 +17,26 @@ readonly class UsageEventDTO
         public int $quantity,
         public string $eventType,
         public Carbon $recordedAt,
+        public ?string $eventId = null,
+        public ?int $units = null,
+        public ?Carbon $timestamp = null,
     ) {}
 
     public static function fromRequest(array $validated): self
     {
+        $key = $validated['idempotency_key'] ?? $validated['event_id'] ?? Str::uuid()->toString();
+        $qty = $validated['quantity'] ?? $validated['units'] ?? 1;
+        $date = Carbon::parse($validated['recorded_at'] ?? $validated['timestamp'] ?? now());
+
         return new self(
             customerId: $validated['customer_id'],
-            idempotencyKey: $validated['idempotency_key'],
-            quantity: $validated['quantity'] ?? 1,
+            idempotencyKey: $key,
+            quantity: $qty,
             eventType: $validated['event_type'] ?? 'api_call',
-            recordedAt: Carbon::parse($validated['recorded_at'] ?? now()),
+            recordedAt: $date,
+            eventId: $key,
+            units: $qty,
+            timestamp: $date,
         );
     }
 }

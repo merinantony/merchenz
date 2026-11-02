@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\Customer;
+use App\Models\DailyUsageAggregation;
 use App\Models\DailyUsageSummary;
 use App\Models\Merchant;
 use App\Models\Plan;
@@ -176,7 +177,18 @@ class DatabaseSeeder extends Seeder
             $variance = $dailyAverage * 0.3;
             $dailyUsage = max(1, (int) ($dailyAverage + rand(-$variance, $variance)));
 
-            // Create daily usage summary
+            // Create daily usage aggregation and summary
+            DailyUsageAggregation::updateOrCreate(
+                [
+                    'customer_id' => $customer->id,
+                    'usage_date' => $date->toDateString(),
+                ],
+                [
+                    'total_units' => $dailyUsage,
+                    'total_quantity' => $dailyUsage,
+                ]
+            );
+
             DailyUsageSummary::updateOrCreate(
                 [
                     'customer_id' => $customer->id,
@@ -184,6 +196,7 @@ class DatabaseSeeder extends Seeder
                 ],
                 [
                     'total_quantity' => $dailyUsage,
+                    'total_units' => $dailyUsage,
                 ]
             );
 

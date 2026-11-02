@@ -13,8 +13,10 @@ return new class extends Migration
             $table->foreignId('merchant_id')->constrained()->cascadeOnDelete();
             $table->string('name');
             $table->decimal('base_price', 12, 2);
+            $table->integer('billing_cycle')->default(30);
             $table->integer('billing_cycle_days')->default(30);
-            $table->integer('included_units');
+            $table->bigInteger('included_usage_units')->default(0);
+            $table->bigInteger('included_units')->default(0);
             $table->decimal('overage_rate_per_unit', 10, 4);
             $table->boolean('is_active')->default(true);
             $table->timestamps();

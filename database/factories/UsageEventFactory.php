@@ -13,12 +13,19 @@ class UsageEventFactory extends Factory
 
     public function definition(): array
     {
+        $uuid = Str::uuid()->toString();
+        $date = fake()->dateTimeBetween('-30 days', 'now');
+        $qty = fake()->numberBetween(1, 100);
+
         return [
             'customer_id' => Customer::factory(),
-            'idempotency_key' => Str::uuid()->toString(),
-            'quantity' => fake()->numberBetween(1, 100),
+            'event_id' => $uuid,
+            'idempotency_key' => $uuid,
+            'units' => $qty,
+            'quantity' => $qty,
             'event_type' => 'api_call',
-            'recorded_at' => fake()->dateTimeBetween('-30 days', 'now'),
+            'timestamp' => $date,
+            'recorded_at' => $date,
         ];
     }
 }
