@@ -55,3 +55,4 @@ class RecordUsageRequest extends FormRequest
         return UsageEventDTO::fromRequest($this->validated());
     }
 }
+

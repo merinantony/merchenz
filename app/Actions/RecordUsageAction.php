@@ -76,3 +76,4 @@ class RecordUsageAction
         RecordUsageJob::dispatch($dto);
     }
 }
+

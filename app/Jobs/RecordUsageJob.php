@@ -32,3 +32,4 @@ class RecordUsageJob implements ShouldQueue
         $action->execute($this->dto);
     }
 }
+

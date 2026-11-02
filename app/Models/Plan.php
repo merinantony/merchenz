@@ -37,39 +37,47 @@ class Plan extends Model
     {
         static::saving(function (Plan $plan) {
             // Keep included_usage_units and included_units synchronized
-            if ($plan->included_usage_units !== null && ($plan->included_units === null || $plan->included_units === 0)) {
-                $plan->included_units = $plan->included_usage_units;
-            } elseif ($plan->included_units !== null && ($plan->included_usage_units === null || $plan->included_usage_units === 0)) {
+            if ($plan->isDirty('included_units') && !$plan->isDirty('included_usage_units')) {
                 $plan->included_usage_units = $plan->included_units;
+            } elseif ($plan->isDirty('included_usage_units') && !$plan->isDirty('included_units')) {
+                $plan->included_units = $plan->included_usage_units;
+            } elseif ($plan->included_units && !$plan->included_usage_units) {
+                $plan->included_usage_units = $plan->included_units;
+            } elseif ($plan->included_usage_units && !$plan->included_units) {
+                $plan->included_units = $plan->included_usage_units;
             }
 
             // Keep billing_cycle and billing_cycle_days synchronized
-            if ($plan->billing_cycle !== null && ($plan->billing_cycle_days === null || $plan->billing_cycle_days === 0)) {
-                $plan->billing_cycle_days = (int) $plan->billing_cycle;
-            } elseif ($plan->billing_cycle_days !== null && ($plan->billing_cycle === null || $plan->billing_cycle === 0)) {
-                $plan->billing_cycle = (int) $plan->billing_cycle_days;
+            if ($plan->isDirty('billing_cycle_days') && !$plan->isDirty('billing_cycle')) {
+                $plan->billing_cycle = $plan->billing_cycle_days;
+            } elseif ($plan->isDirty('billing_cycle') && !$plan->isDirty('billing_cycle_days')) {
+                $plan->billing_cycle_days = $plan->billing_cycle;
+            } elseif ($plan->billing_cycle_days && !$plan->billing_cycle) {
+                $plan->billing_cycle = $plan->billing_cycle_days;
+            } elseif ($plan->billing_cycle && !$plan->billing_cycle_days) {
+                $plan->billing_cycle_days = $plan->billing_cycle;
             }
         });
     }
 
-    public function getIncludedUsageUnitsAttribute(): int
+    public function getIncludedUsageUnitsAttribute($value): int
     {
-        return (int) ($this->attributes['included_usage_units'] ?? $this->attributes['included_units'] ?? 0);
+        return (int) ($value ?? ($this->attributes['included_units'] ?? 0));
     }
 
-    public function getIncludedUnitsAttribute(): int
+    public function getIncludedUnitsAttribute($value): int
     {
-        return (int) ($this->attributes['included_units'] ?? $this->attributes['included_usage_units'] ?? 0);
+        return (int) ($value ?? ($this->attributes['included_usage_units'] ?? 0));
     }
 
-    public function getBillingCycleAttribute(): int
+    public function getBillingCycleAttribute($value): int
     {
-        return (int) ($this->attributes['billing_cycle'] ?? $this->attributes['billing_cycle_days'] ?? 30);
+        return (int) ($value ?? ($this->attributes['billing_cycle_days'] ?? 30));
     }
 
-    public function getBillingCycleDaysAttribute(): int
+    public function getBillingCycleDaysAttribute($value): int
     {
-        return (int) ($this->attributes['billing_cycle_days'] ?? $this->attributes['billing_cycle'] ?? 30);
+        return (int) ($value ?? ($this->attributes['billing_cycle'] ?? 30));
     }
 
     public function merchant(): BelongsTo

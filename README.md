@@ -157,34 +157,53 @@ overage_cost     = overage × plan.overage_rate_per_unit
 ## API Reference
 
 ### POST `/api/usage`
-Record a usage event (idempotent, rate-limited at 120 req/min).
+Record a usage event (strictly idempotent via `event_id`, rate-limited at 120 req/min, optional fast queue dispatch).
 
 **Request:**
 ```json
 {
     "customer_id": 1,
-    "idempotency_key": "uuid-or-unique-string",
-    "quantity": 5,
+    "event_id": "evt_unique_uuid_or_string",
+    "units": 5,
     "event_type": "api_call",
-    "recorded_at": "2024-01-15T10:30:00Z"
+    "timestamp": "2024-01-15T10:30:00Z"
 }
 ```
 
-**Response (201 Created / 200 Duplicate):**
+*Note: Also accepts legacy `idempotency_key`, `quantity`, and `recorded_at` for backward compatibility.*
+
+**Response (201 Created):**
 ```json
 {
     "message": "Usage event recorded.",
     "data": {
         "id": 42,
         "customer_id": 1,
-        "idempotency_key": "uuid-or-unique-string",
-        "quantity": 5,
+        "event_id": "evt_unique_uuid_or_string",
+        "units": 5,
         "event_type": "api_call",
-        "recorded_at": "2024-01-15T10:30:00+00:00",
+        "timestamp": "2024-01-15T10:30:00+00:00",
         "created": true
     }
 }
 ```
+
+**Response (200 Duplicate Retry — Safely Ignored):**
+```json
+{
+    "message": "Duplicate event — already recorded.",
+    "data": {
+        "id": 42,
+        "customer_id": 1,
+        "event_id": "evt_unique_uuid_or_string",
+        "units": 5,
+        "created": false
+    }
+}
+```
+
+**Asynchronous Queue Ingestion (`?async=true` or `X-Queue: true`):**
+Returns `202 Accepted` immediately, offloading database insertion to `RecordUsageJob` on the fast queue.
 
 ### GET `/api/merchants/{id}/dashboard`
 Returns analytics for the merchant's dashboard.
