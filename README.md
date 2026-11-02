@@ -15,7 +15,7 @@ MerchenZ is an enterprise-grade Multi-Tenant SaaS usage metering, analytics, and
 8. [Dashboard Metrics & Redis Caching](#dashboard-metrics--redis-caching)
 9. [Database Schema & Partitioning](#database-schema--partitioning)
 10. [Quick Start & Demo Credentials](#quick-start--demo-credentials)
-11. [Automated Test Suite (57 Tests, 449 Assertions)](#automated-test-suite-57-tests-449-assertions)
+11. [Automated Test Suite (66 Tests, 531 Assertions)](#automated-test-suite-66-tests-531-assertions)
 
 ---
 
@@ -253,6 +253,129 @@ php artisan serve
 
 ---
 
+## Laravel Sanctum API & Postman Testing Guide
+
+The API is fully authenticated via **Laravel Sanctum** using Bearer tokens, providing clean JSON endpoints for Postman testing.
+
+### 1. Authentication Endpoints
+
+#### Register as Tenant / Admin (`POST /api/register` or `POST /api/auth/register`):
+```json
+{
+    "name": "Sarah Connor",
+    "email": "admin@cyberdyne.io",
+    "password": "password1234",
+    "company_name": "Cyberdyne Systems",
+    "phone": "+1 555 0199"
+}
+```
+**Response (201 Created):**
+```json
+{
+    "message": "Registration successful",
+    "token": "1|AbCdEf123456789...",
+    "token_type": "Bearer",
+    "user": { "id": 2, "name": "Sarah Connor", "email": "admin@cyberdyne.io", "role": "admin", "merchant_id": 2 },
+    "merchant": { "id": 2, "company_name": "Cyberdyne Systems", "api_key": "mk_..." }
+}
+```
+
+#### Login (`POST /api/login` or `POST /api/auth/login`):
+```json
+{
+    "email": "admin@cyberdyne.io",
+    "password": "password1234"
+}
+```
+**Response (200 OK):**
+```json
+{
+    "message": "Login successful",
+    "token": "2|XyZ987654321...",
+    "token_type": "Bearer",
+    "user": { "id": 2, "name": "Sarah Connor", "email": "admin@cyberdyne.io", "role": "admin", "merchant_id": 2 },
+    "role": "admin",
+    "merchant_id": 2
+}
+```
+
+#### Authenticated Profile (`GET /api/user` or `GET /api/auth/me`):
+- Header: `Authorization: Bearer <token>`
+- Returns user profile, tenant company info, and assigned plan tier.
+
+#### Logout (`POST /api/logout`):
+- Header: `Authorization: Bearer <token>`
+- Revokes token immediately from database.
+
+---
+
+### 2. Personas & Core Workflows
+
+#### A. Admin / Merchant (Tenant) Persona
+The tenant defines pricing tiers and inspects customer usage:
+- **Define Subscription Plan** (`POST /api/plans`):
+  ```json
+  {
+      "name": "High-Throughput Tier",
+      "base_price": 299.00,
+      "included_units": 100000,
+      "overage_rate_per_unit": 0.0150,
+      "billing_cycle_days": 30
+  }
+  ```
+- **Update Plan Pricing** (`PUT /api/plans/{id}`):
+  - Updates base price or overage rates, automatically triggering `PlanObserver` Redis cache invalidation.
+- **View Dashboard Metrics (JSON)** (`GET /api/merchants/{id}/dashboard` or `GET /api/dashboard/metrics`):
+  - Returns current cycle usage vs allowance, Top 5 customers by usage, projected overage revenue, and MoM churn risk (>50% drop).
+
+#### B. User / Customer Persona
+Subscribes to a merchant's plan and generates usage events:
+- **Subscribe to Plan** (`POST /api/subscriptions`):
+  ```json
+  {
+      "customer_id": 1,
+      "plan_id": 2
+  }
+  ```
+- **Generate Metered Usage** (`POST /api/usage`):
+  ```json
+  {
+      "customer_id": 1,
+      "event_id": "evt_live_001928",
+      "units": 50,
+      "event_type": "api_request"
+  }
+  ```
+  - Rate-limited to 120 req/min, strictly idempotent on `event_id`.
+
+---
+
+## Background Processing: Queued Jobs & Prorated Invoices
+
+Instead of real-time query bottlenecks upon user login, usage ingestion is decoupled into background processing:
+
+### 1. `AggregateDailyUsageJob` (Nightly Rollup)
+- Processes raw `usage_events` in chunks of **5,000 rows**.
+- Aggregates usage units by `customer_id` and date, performing idempotent `UPSERT` into `daily_usage_aggregations`.
+- **CLI Trigger**:
+  ```bash
+  php artisan usage:aggregate --date=2026-11-01
+  ```
+
+### 2. `GenerateCycleInvoicesJob` (Cycle-End Prorated Billing)
+- Runs at billing cycle end.
+- Queries pre-aggregated daily summaries and executes [`CalculateBillingService`](app/Services/CalculateBillingService.php) to calculate:
+  - Prorated base prices across mid-cycle changes.
+  - Split-rate usage segment math before/after plan changes.
+  - Bounded overage amounts at plan-specific rates.
+- Generates itemized `invoices` and `invoice_line_items`, and sets subscription status to `expired`.
+- **CLI Trigger**:
+  ```bash
+  php artisan billing:generate-invoices --subscription=1
+  ```
+
+---
+
 ## Custom Error & System Availability Pages
 
 All error and availability pages share the responsive **Dark** (Black & Red) and **White** (Red & White) combo themes with strict "Dark" and "White" toggle buttons:
@@ -272,7 +395,7 @@ All error and availability pages share the responsive **Dark** (Black & Red) and
 
 ---
 
-## Automated Test Suite (61 Tests, 472 Assertions)
+## Automated Test Suite (66 Tests, 531 Assertions)
 
 Execute the complete automated test suite:
 
@@ -335,6 +458,12 @@ php artisan test
   - Super Admin bypassing `TenantScope` to view all platform data
   - Role-based login redirection (`super_admin`, `admin`, `user`)
   - Regular user restricted to plan viewing only (and 403 on Super Admin dashboard)
+- **`SanctumApiAndRolesTest`** (5 tests):
+  - API registration for Merchant Admin issuing Sanctum token
+  - API login issuing Sanctum Bearer token and logout revocation
+  - Admin / Merchant persona defining and updating plans with pricing cache
+  - User / Customer persona subscribing to plans and generating usage events
+  - Queued chunked background job (`AggregateDailyUsageJob`) aggregating daily usage and generating prorated cycle invoices (`GenerateCycleInvoicesJob`)
 - **`UsageAndAggregationTest`** (8 tests):
   - Raw usage event insertion
   - Idempotent request handling
@@ -342,6 +471,6 @@ php artisan test
   - Multi-customer aggregation handling
 
 ```
-Tests:    61 passed (472 assertions)
-Duration: 3.02s
+Tests:    66 passed (531 assertions)
+Duration: 3.50s
 ```

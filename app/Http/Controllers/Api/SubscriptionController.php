@@ -12,6 +12,43 @@ use Illuminate\Http\Request;
 class SubscriptionController extends Controller
 {
     /**
+     * POST /api/subscriptions
+     *
+     * Subscribe a customer to a merchant's plan.
+     */
+    public function store(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'customer_id' => 'required|integer|exists:customers,id',
+            'plan_id' => 'required|integer|exists:plans,id',
+            'started_at' => 'nullable|date',
+            'ends_at' => 'nullable|date',
+        ]);
+
+        $plan = \App\Models\Plan::findOrFail($validated['plan_id']);
+        $cycleDays = $plan->billing_cycle_days ?: ($plan->billing_cycle ?: 30);
+
+        $startedAt = !empty($validated['started_at']) ? Carbon::parse($validated['started_at']) : Carbon::now()->startOfMonth();
+        $endsAt = !empty($validated['ends_at']) ? Carbon::parse($validated['ends_at']) : (clone $startedAt)->addDays($cycleDays);
+
+        $customer = \App\Models\Customer::findOrFail($validated['customer_id']);
+
+        $subscription = Subscription::create([
+            'merchant_id' => $customer->merchant_id ?: $plan->merchant_id,
+            'customer_id' => $customer->id,
+            'plan_id' => $plan->id,
+            'started_at' => $startedAt,
+            'ends_at' => $endsAt,
+            'status' => 'active',
+        ]);
+
+        return response()->json([
+            'message' => 'Subscription created successfully.',
+            'data' => $subscription->load(['plan', 'customer']),
+        ], 201);
+    }
+
+    /**
      * POST /api/subscriptions/{id}/change-plan
      *
      * Handle mid-cycle plan upgrade/downgrade.

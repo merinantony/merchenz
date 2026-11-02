@@ -59,6 +59,7 @@ class Subscription extends Model
      */
     public function getCycleDays(): int
     {
-        return (int) $this->started_at->diffInDays($this->ends_at);
+        return max(1, (int) \Carbon\Carbon::parse($this->started_at->toDateString())
+            ->diffInDays(\Carbon\Carbon::parse($this->ends_at->toDateString())));
     }
 }

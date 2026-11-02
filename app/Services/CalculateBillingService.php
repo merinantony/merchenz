@@ -150,7 +150,7 @@ class CalculateBillingService
     ): InvoiceLineItem {
         $plan = $this->planCache->findOrFail($planId);
 
-        $segmentDays = max(1, (int) $segmentStart->diffInDays($segmentEnd));
+        $segmentDays = max(1, (int) Carbon::parse($segmentStart->toDateString())->diffInDays(Carbon::parse($segmentEnd->toDateString())));
         $prorationFactor = $totalCycleDays > 0 ? ($segmentDays / $totalCycleDays) : 1.0;
 
         // Base price proration

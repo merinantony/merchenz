@@ -25,3 +25,16 @@ Artisan::command('inspire', function () {
 
 Schedule::job(new AggregateDailyUsageJob())->dailyAt('01:00');
 Schedule::job(new GenerateCycleInvoicesJob())->dailyAt('02:00');
+
+// CLI Commands to manually dispatch queued jobs for testing/demonstration
+Artisan::command('usage:aggregate {--date= : Target date (YYYY-MM-DD)}', function () {
+    $date = $this->option('date');
+    dispatch(new AggregateDailyUsageJob($date));
+    $this->info("AggregateDailyUsageJob dispatched successfully" . ($date ? " for {$date}" : " for yesterday"));
+})->purpose('Dispatch queued chunked daily usage aggregation job');
+
+Artisan::command('billing:generate-invoices {--subscription= : Optional subscription ID}', function () {
+    $subscriptionId = $this->option('subscription') ? (int) $this->option('subscription') : null;
+    dispatch(new GenerateCycleInvoicesJob($subscriptionId));
+    $this->info("GenerateCycleInvoicesJob dispatched successfully" . ($subscriptionId ? " for subscription #{$subscriptionId}" : " for all expired cycles"));
+})->purpose('Dispatch queued cycle invoice generation job with prorated math');
