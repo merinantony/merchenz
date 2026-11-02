@@ -82,3 +82,4 @@ class GenerateCycleInvoicesJob implements ShouldQueue
         }
     }
 }
+

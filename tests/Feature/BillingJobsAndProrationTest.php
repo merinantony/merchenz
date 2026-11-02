@@ -287,3 +287,4 @@ class BillingJobsAndProrationTest extends TestCase
         $this->assertEquals(1, $subscription->invoices()->count());
     }
 }
+

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\DashboardMetricsController;
 use App\Http\Controllers\Api\MerchantDashboardController;
 use App\Http\Controllers\Api\SubscriptionController;
 use App\Http\Controllers\Api\UsageController;
@@ -20,8 +21,10 @@ use Illuminate\Support\Facades\Route;
 Route::post('/usage', [UsageController::class, 'store'])
     ->middleware('throttle:usage');
 
-// Merchant dashboard
+// Merchant dashboard & metrics API
 Route::get('/merchants/{id}/dashboard', [MerchantDashboardController::class, 'show']);
+Route::get('/merchants/{id}/metrics', [DashboardMetricsController::class, 'show']);
+Route::get('/dashboard/metrics', [DashboardMetricsController::class, 'index']);
 
 // Subscription management
 Route::post('/subscriptions/{id}/change-plan', [SubscriptionController::class, 'changePlan']);
