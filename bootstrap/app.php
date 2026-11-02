@@ -21,9 +21,11 @@ return Application::configure(basePath: dirname(__DIR__))
         //
     })
     ->booted(function () {
-        // Rate limiter for the usage endpoint: 120 requests per minute per IP
+        // Rate limiter for the usage endpoint: 120 requests per minute
         RateLimiter::for('usage', function (Request $request) {
-            return Limit::perMinute(120)->by($request->ip());
+            return Limit::perMinute(120)->by(
+                $request->header('X-API-Key') ?: $request->ip()
+            );
         });
     })
     ->create();

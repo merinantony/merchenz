@@ -2,39 +2,49 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\DTOs\UsageEventDTO;
+use App\Actions\RecordUsageAction;
 use App\Http\Controllers\Controller;
-use App\Services\UsageService;
+use App\Http\Requests\RecordUsageRequest;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 
 class UsageController extends Controller
 {
     public function __construct(
-        private readonly UsageService $usageService
+        private readonly RecordUsageAction $recordUsageAction
     ) {}
 
     /**
      * POST /api/usage
      *
-     * Record a usage event. Idempotent — retried requests won't double-count.
-     * Rate-limited via middleware (120 req/min per API key).
+     * Record a customer usage event.
+     * Features:
+     * - Heavily rate-limited (120 req/min).
+     * - Strictly idempotent using event_id (retried requests safely ignored).
+     * - Minimal response time with optional async queue dispatching.
      */
-    public function store(Request $request): JsonResponse
+    public function store(RecordUsageRequest $request): JsonResponse
     {
-        $validated = $request->validate([
-            'customer_id' => 'required|integer|exists:customers,id',
-            'idempotency_key' => 'required_without:event_id|nullable|string|max:128',
-            'event_id' => 'required_without:idempotency_key|nullable|string|max:128',
-            'quantity' => 'sometimes|integer|min:1',
-            'units' => 'sometimes|integer|min:1',
-            'event_type' => 'sometimes|string|max:50',
-            'recorded_at' => 'sometimes|date',
-            'timestamp' => 'sometimes|date',
-        ]);
+        $dto = $request->toDTO();
 
-        $dto = UsageEventDTO::fromRequest($validated);
-        $result = $this->usageService->recordEvent($dto);
+        // If client specifically requests asynchronous background queuing
+        if ($request->boolean('async') || $request->header('X-Queue') === 'true') {
+            $this->recordUsageAction->dispatch($dto);
+
+            return response()->json([
+                'message' => 'Usage event queued for processing.',
+                'data' => [
+                    'event_id' => $dto->eventId,
+                    'idempotency_key' => $dto->idempotencyKey,
+                    'customer_id' => $dto->customerId,
+                    'units' => $dto->units,
+                    'quantity' => $dto->quantity,
+                    'queued' => true,
+                ],
+            ], 202);
+        }
+
+        // Fast idempotent execution
+        $result = $this->recordUsageAction->execute($dto);
 
         $statusCode = $result['created'] ? 201 : 200;
         $message = $result['created'] ? 'Usage event recorded.' : 'Duplicate event — already recorded.';
@@ -42,15 +52,15 @@ class UsageController extends Controller
         return response()->json([
             'message' => $message,
             'data' => [
-                'id' => $result['event']->id,
-                'customer_id' => $result['event']->customer_id,
-                'event_id' => $result['event']->event_id,
-                'idempotency_key' => $result['event']->idempotency_key,
-                'units' => $result['event']->units,
-                'quantity' => $result['event']->quantity,
-                'event_type' => $result['event']->event_type,
-                'timestamp' => $result['event']->timestamp?->toIso8601String(),
-                'recorded_at' => $result['event']->recorded_at?->toIso8601String(),
+                'id' => $result['event']?->id,
+                'customer_id' => $result['event']?->customer_id ?? $dto->customerId,
+                'event_id' => $result['event']?->event_id ?? $dto->eventId,
+                'idempotency_key' => $result['event']?->idempotency_key ?? $dto->idempotencyKey,
+                'units' => $result['event']?->units ?? $dto->units,
+                'quantity' => $result['event']?->quantity ?? $dto->quantity,
+                'event_type' => $result['event']?->event_type ?? $dto->eventType,
+                'timestamp' => $result['event']?->timestamp?->toIso8601String() ?? $dto->timestamp->toIso8601String(),
+                'recorded_at' => $result['event']?->recorded_at?->toIso8601String() ?? $dto->recordedAt->toIso8601String(),
                 'created' => $result['created'],
             ],
         ], $statusCode);
